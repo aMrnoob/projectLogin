@@ -39,4 +39,43 @@ public class UserController {
             return ResponseEntity.badRequest().body(new ApiResponse(false, "Invalid username or password"));
         }
     }
+	
+	@PostMapping("/request")
+    public ResponseEntity<String> requestPasswordReset(@RequestBody UserResetPasswordRequest request) {
+        String email = request.getEmail();
+
+        if (!userService.isEmailValid(email)) {
+            return ResponseEntity.badRequest().body("Email không tồn tại trong hệ thống.");
+        }
+
+        String otp = userService.generateOtp();
+
+        boolean isSent = userService.sendOtp(email, otp);
+
+        if (isSent) {
+            otpStorage.put(email, otp);
+            return ResponseEntity.ok("OTP đã được gửi đến email của bạn.");
+        } else {
+            return ResponseEntity.status(500).body("Không thể gửi OTP. Vui lòng thử lại sau.");
+        }
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<String> verifyOtpAndResetPassword(
+            @RequestParam String email,
+            @RequestParam String otp,
+            @RequestParam String newPassword) {
+
+        if (otpStorage.containsKey(email) && otpStorage.get(email).equals(otp)) {
+            boolean isPasswordReset = userService.resetPassword(email, newPassword);
+            if (isPasswordReset) {
+                otpStorage.remove(email);
+                return ResponseEntity.ok("Mật khẩu đã được đặt lại thành công.");
+            } else {
+                return ResponseEntity.status(500).body("Không thể đặt lại mật khẩu. Vui lòng thử lại sau.");
+            }
+        } else {
+            return ResponseEntity.badRequest().body("OTP không hợp lệ hoặc đã hết hạn.");
+        }
+    }
 }
