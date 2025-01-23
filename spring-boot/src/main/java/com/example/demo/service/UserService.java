@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,9 @@ public class UserService {
 	
 	@Autowired
     private UserRepository userRepository;
+	
+	@Autowired
+    private EmailService emailService;
 
     public boolean register(User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent() || 
