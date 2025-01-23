@@ -58,7 +58,6 @@ class MainActivity : ComponentActivity() {
 
                         val intent = Intent(this@MainActivity, HomeActivity::class.java)
                         startActivity(intent)
-                        finish()
                     } else {
                         Toast.makeText(this@MainActivity, apiResponse?.message ?: "Login failed", Toast.LENGTH_SHORT).show()
                     }
