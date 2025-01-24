@@ -28,9 +28,9 @@ public class UserController {
 	@PostMapping("/register")
 	public ResponseEntity<ApiResponse> register(@RequestBody User user) {
 	    if (userService.register(user)) {
-	        return ResponseEntity.ok(new ApiResponse(true, "User registered successfully"));
+	        return ResponseEntity.ok(new ApiResponse(true, "Đăng ký tài khoản thành công"));
 	    } else {
-	        return ResponseEntity.badRequest().body(new ApiResponse(false, "Username or Email already exists"));
+	        return ResponseEntity.badRequest().body(new ApiResponse(false, "Tên đăng nhập hoặc email không tồn tại"));
 	    }
 	}
 
@@ -38,9 +38,9 @@ public class UserController {
     public ResponseEntity<ApiResponse> login(@RequestBody UserLoginRequest userLoginRequest) {
         Optional<User> validUser = userService.login(userLoginRequest);
         if (validUser.isPresent()) {
-            return ResponseEntity.ok(new ApiResponse(true, "Login successful"));
+            return ResponseEntity.ok(new ApiResponse(true, "Đăng nhập thành công"));
         } else {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "Invalid username or password"));
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Tên đăng nhập hoặc mật khẩu bị sai"));
         }
     }
 	
@@ -59,7 +59,7 @@ public class UserController {
 
 	    boolean isSent = userService.sendOtp(email, otp);
 	    if (isSent) {
-	        return ResponseEntity.ok(new ApiResponse(true, "OTP đã được gửi đến email của bạn."));
+	        return ResponseEntity.ok(new ApiResponse(true, "OTP đã được gửi đến email của bạn.", OtpStorage.otpStorage));
 	    } else {
 	        return ResponseEntity.status(500).body(new ApiResponse(false, "Không thể gửi OTP. Vui lòng thử lại sau."));
 	    }
@@ -67,30 +67,37 @@ public class UserController {
 
 
 	@PostMapping("/verify")
-	public ResponseEntity<ApiResponse> verifyOtpAndResetPassword(
-	        @RequestParam String email,
-	        @RequestParam String otp,
-	        @RequestParam String newPassword) {
-
-	    OtpEntry otpEntry = OtpStorage.otpStorage.get(email);
-
+	public ResponseEntity<ApiResponse> verifyOtpAndResetPassword(@RequestBody UserResetPasswordRequest request) {
+		
+		String email = request.getEmail();
+		String otp = request.getOtp();
+		
+		OtpEntry otpEntry = OtpStorage.otpStorage.get(email);
+		
 	    if (otpEntry != null) {
 	        long currentTime = System.currentTimeMillis();
 
 	        if (otpEntry.getOtp().equals(otp) && otpEntry.getExpiryTime() > currentTime) {
-	            boolean isPasswordReset = userService.resetPassword(email, newPassword);
-	            if (isPasswordReset) {
-	                OtpStorage.otpStorage.remove(email);
-	                return ResponseEntity.ok(new ApiResponse(true, "Mật khẩu đã được đặt lại thành công."));
-	            } else {
-	                return ResponseEntity.status(500).body(new ApiResponse(false, "Không thể đặt lại mật khẩu. Vui lòng thử lại sau."));
-	            }
+	            return ResponseEntity.ok(new ApiResponse(true, "OTP hợp lệ. Bạn có thể đổi mật khẩu mới."));
 	        } else if (otpEntry.getExpiryTime() <= currentTime) {
 	            OtpStorage.otpStorage.remove(email); 
 	            return ResponseEntity.badRequest().body(new ApiResponse(false, "OTP đã hết hạn."));
 	        }
 	    }
 
-	    return ResponseEntity.badRequest().body(new ApiResponse(false, "OTP không hợp lệ hoặc đã hết hạn."));
+	    return ResponseEntity.badRequest().body(new ApiResponse(false, "OTP không hợp lệ."));
+	}
+	
+	@PostMapping("/reset")
+	public ResponseEntity<ApiResponse> passwordReset(@RequestBody UserResetPasswordRequest request) {
+	    String email = request.getEmail();
+	    String newPassword = request.getNewPassword();
+
+	    boolean isReset = userService.resetPassword(email, newPassword);
+	    if (isReset) {
+	        return ResponseEntity.ok(new ApiResponse(true, "Thay đổi mật khẩu thành công."));
+	    } else {
+	        return ResponseEntity.status(500).body(new ApiResponse(false, "Thay đổi mật khẩu thất bại. Vui lòng thử lại."));
+	    }
 	}
 }

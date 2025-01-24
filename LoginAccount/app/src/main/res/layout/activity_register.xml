@@ -78,7 +78,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/login_edittext"
         android:ems="10"
-        android:inputType="text"
+        android:inputType="textEmailAddress"
         android:hint="Enter email"
         app:layout_constraintEnd_toEndOf="@+id/tvEmail"
         app:layout_constraintHorizontal_bias="0.0"

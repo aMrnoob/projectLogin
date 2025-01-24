@@ -25,6 +25,12 @@ class MainActivity : ComponentActivity() {
         val btnLogin = findViewById<Button>(R.id.btnLogin)
         val edtUserName = findViewById<EditText>(R.id.edtUserName)
         val edtPassword = findViewById<EditText>(R.id.edtPwd)
+        val btnForgetpwd = findViewById<Button>(R.id.btnForgetpwd)
+
+        btnForgetpwd.setOnClickListener {
+            val intent = Intent(this, Reset_Password::class.java)
+            startActivity(intent)
+        }
 
         btnLogin.setOnClickListener {
             val username = edtUserName.text.toString().trim()
